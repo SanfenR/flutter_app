@@ -1,117 +1,236 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  runApp(
+    new MaterialApp(
+      title: 'MyApp',
+//      home: new TutorialHome(),
+      home: new ShoppingList(
+        products: <Product> [
+          new Product(name: "Eggs"),
+          new Product(name: 'Flour'),
+          new Product(name: 'Chocolate chips')
+        ],
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+      ),
+
+    ),
+  );
+}
+
+class TutorialHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+    return new Scaffold(
+      appBar: new AppBar(
+        leading: new IconButton(
+            icon: new Icon(Icons.menu),
+            tooltip: 'Navigation menu',
+            onPressed: null),
+        title: new Text('Example title'),
+        actions: <Widget>[
+          new IconButton(
+              icon: new Icon(Icons.search), tooltip: 'Search', onPressed: null)
+        ],
       ),
-      home: MyHomePage(title: 'Flutter Page'),
+      body: new Center(
+        child: new Counter(),
+      ),
+      floatingActionButton: new FloatingActionButton(
+          tooltip: 'Add', child: new Icon(Icons.add), onPressed: null),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class Product {
+  final String name;
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
+  const Product({this.name});
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  int _edit_count = 0;
+typedef void CartChangeCallback(Product product, bool isChat);
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter = _counter + _edit_count;
-    });
+class ShoppingListItem extends StatelessWidget {
+  final Product product;
+  final bool isCart;
+  final CartChangeCallback onCartChanged;
+
+  ShoppingListItem({Product product, this.isCart, this.onCartChanged})
+      : product = product,
+        super(key: new ObjectKey(product));
+
+  Color _getColor(BuildContext context) {
+    return isCart ? Colors.black54 : Theme.of(context).primaryColor;
   }
 
-  void _onEdit(String s) {
+  TextStyle _getTextStyle(BuildContext context) {
+    if (!isCart) return null;
+    return new TextStyle(
+        color: Colors.black54, decoration: TextDecoration.lineThrough);
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return new ListTile(
+      onTap: (){
+        onCartChanged(product, !isCart);
+      },
+      leading: new CircleAvatar(
+        backgroundColor: _getColor(context),
+        child: new Text(product.name[0]),
+      ),
+      title: new Text(product.name, style: _getTextStyle(context)),
+    );
+  }
+}
+
+class ShoppingList extends StatefulWidget {
+  final List<Product> products;
+  ShoppingList({Key key, this.products}) : super(key: key);
+
+
+  @override
+  State<StatefulWidget> createState() => new ShoppingListState();
+
+}
+
+class ShoppingListState extends State<ShoppingList> {
+  Set<Product> _shoppingCart = new Set<Product>();
+
+  void _handleCartChanged(Product product, bool isChat) {
     setState(() {
-      _edit_count =int.parse(s);
+      if(isChat) {
+        _shoppingCart.add(product);
+      } else {
+        _shoppingCart.remove(product);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-//        actions: <Widget>[
-//          new PopupMenuButton(itemBuilder: null,
-//            onSelected: (String value) => {
-//
-//            },
-//          )
-//        ],
 
+    return new Scaffold(
+      appBar: new AppBar(
+        title: new Text('Shopping List'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              '$_edit_count',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-            TextField (
-              onChanged: _onEdit,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.all(10),
-                icon: Icon(Icons.ac_unit),
-                labelText: "输入diff",
-              ),
-            ),
-          ],
+      body: new ListView(
+        padding: new EdgeInsets.symmetric(vertical: 8.0),
+        children: widget.products.map((Product product) {
+          return new ShoppingListItem(
+            product: product,
+            isCart: _shoppingCart.contains(product),
+            onCartChanged: _handleCartChanged,
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+
+
+class Counter extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => new _CounterState();
+}
+
+class _CounterState extends State<Counter> {
+  int _counter = 0;
+
+  void _increment() {
+    setState(() {
+      _counter++;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return new Row(
+      children: <Widget>[
+        new RaisedButton(child: new Text('Increment'), onPressed: _increment),
+        new Text('Count: $_counter')
+      ],
+    );
+  }
+}
+
+class MyButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return new GestureDetector(
+      onTap: () {
+        print('MyButton was tapped');
+      },
+      onDoubleTap: () {
+        print('MyButtoon was double tapped');
+      },
+      onLongPress: () {
+        print('MyButton was onLongPress');
+      },
+      child: new Container(
+        height: 36.0,
+        padding: const EdgeInsets.all(8.0),
+        margin: const EdgeInsets.symmetric(horizontal: 8.0),
+        decoration: new BoxDecoration(
+          borderRadius: new BorderRadius.circular(5.0),
+          color: Colors.lightGreen[500],
+        ),
+        child: new Center(
+          child: new Text('Engage'),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
+
+class MyAppBar extends StatelessWidget {
+  final Widget title;
+
+  MyAppBar({this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      height: 56.0,
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      decoration: new BoxDecoration(color: Colors.blue[500]),
+      child: new Row(
+        children: <Widget>[
+          new IconButton(
+              icon: new Icon(Icons.menu),
+              tooltip: "Navigation menu",
+              onPressed: null),
+          new Expanded(child: title),
+          new IconButton(
+              icon: new Icon(Icons.search), tooltip: 'Search', onPressed: null)
+        ],
+      ),
+    );
+  }
+}
+
+class MyScaffold extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return new Material(
+      child: new Column(
+        children: <Widget>[
+          new MyAppBar(
+            title: new Text(
+              'Example Title',
+              style: Theme.of(context).primaryTextTheme.title,
+            ),
+          ),
+          new Expanded(
+              child: new Center(
+            child: new Text('Hello World'),
+          ))
+        ],
+      ),
     );
   }
 }
