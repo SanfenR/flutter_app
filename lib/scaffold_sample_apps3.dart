@@ -7,7 +7,6 @@ void main() {
 class AnimatedListSample extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
-    // TODO: implement createState
     return new _AnimatedListSample();
   }
 }
@@ -43,8 +42,7 @@ class _AnimatedListSample extends State<AnimatedListSample> {
 
   // Insert the "next item" into the list model.
   void _insert() {
-    final int index =
-        _selectedItem == null ? _list.length : _list.indexOf(_selectedItem);
+    final int index = _selectedItem == null ? _list.length : _list.indexOf(_selectedItem);
     _list.insert(index, _nextItem++);
   }
 
@@ -64,7 +62,9 @@ class _AnimatedListSample extends State<AnimatedListSample> {
     _list = new ListModel(
         listKey: _listKey,
         removedItemBuilder: _buildRemovedItem,
-        initialItems: <int>[0, 1, 2]);
+        initialItems: <int>[0, 1, 2, 3]);
+
+    _nextItem = 4;
   }
 
   @override
