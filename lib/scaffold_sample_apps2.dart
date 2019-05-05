@@ -1,85 +1,111 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(new BasicAppBarSample());
+  runApp(new AppBarBottomSample());
 }
 
-class Choice {
-  const Choice({this.title, this.icon});
-  final String title;
-  final IconData icon;
-}
-
-const List<Choice> choices = const <Choice>[
-  const Choice(title: 'Car', icon: Icons.directions_car),
-  const Choice(title: 'Bicycle', icon: Icons.directions_bike),
-  const Choice(title: 'Boat', icon: Icons.directions_boat),
-  const Choice(title: 'Bus', icon: Icons.directions_bus),
-  const Choice(title: 'Train', icon: Icons.directions_railway),
-  const Choice(title: 'Walk', icon: Icons.directions_walk),
-];
-
-class BasicAppBarSample extends StatefulWidget {
+class AppBarBottomSample extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
-    // TODO: implement createState
-    return new _BasicAppBarSampleState();
+    return new _AppBarBottomSample();
   }
 }
 
-class _BasicAppBarSampleState extends State<BasicAppBarSample> {
-  Choice _selectedChoice = choices[0];
+class _AppBarBottomSample extends State<AppBarBottomSample>
+    with SingleTickerProviderStateMixin {
+  TabController _tabController;
 
-  void _select(Choice choice) {
-    setState(() {
-      _selectedChoice = choice;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: choices.length, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _tabController.dispose();
+  }
+
+  void _nextPage(int delta) {
+    final int newIndex = _tabController.index + delta;
+    if (newIndex < 0 || newIndex >= _tabController.length) {
+      return;
+    }
+    _tabController.animateTo(newIndex);
   }
 
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
       home: new Scaffold(
-        appBar: new AppBar(
-          title: const Text("Basic AppBar"),
+        appBar: AppBar(
+          title: new Text("AppBar Bottom Widget"),
+          centerTitle: true,
+          leading: new IconButton(
+            tooltip: "Previous choice",
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              _nextPage(-1);
+            },
+          ),
           actions: <Widget>[
             new IconButton(
-                icon: new Icon(choices[0].icon),
+                icon: Icon(Icons.arrow_forward),
+                tooltip: "Next choice",
                 onPressed: () {
-                  _select(choices[0]);
-                }),
-            new IconButton(
-                icon: Icon(choices[1].icon),
-                onPressed: () {
-                  _select(choices[1]);
-                }),
-            new PopupMenuButton<Choice>(
-                onSelected: _select,
-                itemBuilder: (BuildContext context) {
-                  return choices.skip(2).map((Choice choice) {
-                    return new PopupMenuItem<Choice>(
-                      value: choice,
-                      child: new Text(choice.title),
-                    );
-                  }).toList();
+                  _nextPage(1);
                 })
           ],
+          bottom: new PreferredSize(
+              child: new Theme(
+                  data: Theme.of(context).copyWith(accentColor: Colors.white),
+                  child: new Container(
+                    height: 48.0,
+                    alignment: Alignment.center,
+                    child: new TabPageSelector(
+                      controller: _tabController,
+                    ),
+                  )),
+              preferredSize: Size.fromHeight(48.0)),
         ),
-        body: new Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: new ChoiceCard(choice: _selectedChoice),
-        ),
+        body: new TabBarView(
+          controller: _tabController,
+            children: choices.map((Choice choice) {
+          return new Padding(
+            padding: new EdgeInsets.all(16),
+            child: new ChoiceCard(choice: choice),
+          );
+        }).toList()),
       ),
     );
   }
 }
 
+class Choice {
+  const Choice({this.title, this.icon});
+
+  final String title;
+  final IconData icon;
+}
+
+const List<Choice> choices = const <Choice>[
+  const Choice(title: 'CAR', icon: Icons.directions_car),
+  const Choice(title: 'BICYCLE', icon: Icons.directions_bike),
+  const Choice(title: 'BOAT', icon: Icons.directions_boat),
+  const Choice(title: 'BUS', icon: Icons.directions_bus),
+  const Choice(title: 'TRAIN', icon: Icons.directions_railway),
+  const Choice(title: 'WALK', icon: Icons.directions_walk),
+];
+
 class ChoiceCard extends StatelessWidget {
-  ChoiceCard({Key key, this.choice}) : super(key: key);
+  const ChoiceCard({Key key, this.choice}) : super(key: key);
+
   final Choice choice;
+
   @override
   Widget build(BuildContext context) {
-    final TextStyle style = Theme.of(context).textTheme.display1;
+    final TextStyle textStyle = Theme.of(context).textTheme.display1;
     return new Card(
       color: Colors.white,
       child: new Center(
@@ -87,8 +113,8 @@ class ChoiceCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Icon(choice.icon, size: 128, color: style.color,),
-            Text(choice.title, style: style,)
+            new Icon(choice.icon, size: 128.0, color: textStyle.color),
+            new Text(choice.title, style: textStyle),
           ],
         ),
       ),
