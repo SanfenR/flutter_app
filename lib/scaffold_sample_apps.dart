@@ -71,6 +71,10 @@ class _BasicAppBarSampleState extends State<BasicAppBarSample> {
           child: new ChoiceCard(choice: _selectedChoice),
         ),
       ),
+      routes: <String, WidgetBuilder> {
+//        "/router/second": (_) => new
+      },
+
     );
   }
 }
